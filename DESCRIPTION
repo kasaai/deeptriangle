@@ -1,0 +1,23 @@
+Package: deeptriangle
+Type: Package
+Title: DeepTriangle
+Version: 0.1.0
+Authors@R: person("Kevin", "Kuo", email = "kevin.kuo@rstudio.com", 
+                  role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7803-7901"))
+Maintainer: Kevin Kuo <kevin.kuo@rstudio.com>
+Description: Source code for the DeepTriangle paper.
+License: Apache License (>= 2.0)
+Encoding: UTF-8
+Depends:
+    R (>= 3.2)
+Imports: keras,
+  magrittr,
+  zeallot,
+  R6,
+  dplyr,
+  tidyr,
+  rlang,
+  ggplot2,
+  purrr
+LazyData: true
+RoxygenNote: 6.0.1
