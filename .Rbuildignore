@@ -5,3 +5,4 @@
 ^LICENSE\.md$
 ^internal$
 ^README_cache$
+^\.travis\.yml$

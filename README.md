@@ -1,9 +1,13 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# DeepTriangle
+[![Travis build
+status](https://travis-ci.org/kevinykuo/deeptriangle.svg?branch=master)](https://travis-ci.org/kevinykuo/deeptriangle)
 
-This is the companion repository to the DeepTriangle paper.
+# DeepTriangle: A Deep Learning Approach to Loss Reserving
+
+This is the companion repository to the DeepTriangle paper. A preprint
+can be found at <https://arxiv.org/abs/1804.09253>.
 
 ## Reproducing experiments
 
