@@ -113,15 +113,26 @@ To create actual vs. predicted plots, use the `dt_plot_predictions()`
 function.
 
 ``` r
-dt_plot_predictions(predictions, "337", "workers_compensation",
+# devtools::install_github("thomasp85/patchwork")
+library(patchwork)
+paid_plot <- dt_plot_predictions(predictions, "337", "workers_compensation",
                     "paid_loss")
+case_plot <- dt_plot_predictions(predictions, "337", "workers_compensation",
+                    "claims_outstanding")
+paid_plot + case_plot + plot_layout(ncol = 1)
 ```
 
 <img src="man/figures/README-unnamed-chunk-5-1.png" width="60%" />
 
-``` r
-dt_plot_predictions(predictions, "337", "workers_compensation",
-                    "claims_outstanding")
-```
+## Testing different architectures
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="60%" />
+If you would like to try out different architectures or hyperparameters,
+you can do so by providing a function that returns a compiled keras
+model. See the source code of `dt_model()` for a template. In order to
+utilize other functions in this package, the inputs and outputs of your
+custom function have to match those of `dt_model()`. You can also
+implement different early stopping criteria by providing a function
+similar to `dt_optimize_epochs()`.
+
+For more details on the **keras** R package, visit
+<https://keras.rstudio.com/>.
