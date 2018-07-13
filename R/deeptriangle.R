@@ -25,8 +25,7 @@ dt_model <- function() {
     dt_activation_scaled_sigmoid(name = "paid_output")
 
   model <-  keras::keras_model(
-    inputs = c(ay_seq_input, embedding_input
-    ),
+    inputs = c(ay_seq_input, embedding_input),
     outputs = c(paid_output, case_reserves_output)
   )
 
