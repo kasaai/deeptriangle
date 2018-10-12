@@ -15,7 +15,7 @@ To get started, either clone the repo and build the R package, or
 install with
 
 ``` r
-devtools::install_github("kevinykuo/deeptriangle)
+devtools::install_github("kevinykuo/deeptriangle")
 ```
 
 You will also need the
