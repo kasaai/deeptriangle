@@ -4,7 +4,7 @@
 #'
 #' @param schedule_p_data Schedule P data, i.e. \code{insurance::schedule_p}.
 #' @param group_codes Data frame of LOB and group codes, i.e. \code{dt_group_codes}.
-#' @param train_validation_cutoff Calendar year end of hte temporal split of training
+#' @param train_validation_cutoff Calendar year end of the temporal split of training
 #'   and validation data. The paper uses \code{1995}.
 #'
 #' @return A list of data frames, one for each line of business.

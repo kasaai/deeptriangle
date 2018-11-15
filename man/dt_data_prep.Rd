@@ -4,14 +4,15 @@
 \alias{dt_data_prep}
 \title{Data preparation for DeepTriangle}
 \usage{
-dt_data_prep(schedule_p_data, group_codes, train_validation_cutoff = 1995)
+dt_data_prep(schedule_p_data, group_codes,
+  train_validation_cutoff = 1995)
 }
 \arguments{
 \item{schedule_p_data}{Schedule P data, i.e. \code{insurance::schedule_p}.}
 
 \item{group_codes}{Data frame of LOB and group codes, i.e. \code{dt_group_codes}.}
 
-\item{train_validation_cutoff}{Calendar year end of hte temporal split of training
+\item{train_validation_cutoff}{Calendar year end of the temporal split of training
 and validation data. The paper uses \code{1995}.}
 }
 \value{
