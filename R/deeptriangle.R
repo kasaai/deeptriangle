@@ -9,7 +9,7 @@ dt_model <- function() {
 
   embedding_input <-  keras::layer_input(shape = 1, name = "embedding_input")
   embedding_output <- embedding_input %>%
-    keras::layer_embedding(50, 49) %>%
+    keras::layer_embedding(50, 49, name = "embedding") %>%
     keras::layer_flatten()
 
   concat <-  keras::layer_concatenate(list(ay_seq_output, embedding_output))
