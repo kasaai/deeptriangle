@@ -29,12 +29,6 @@ dt_model <- function() {
     outputs = c(paid_output, case_reserves_output)
   )
 
-  model %>%
-    keras::compile(
-      optimizer = keras::optimizer_adam(amsgrad = TRUE),
-      loss = "mae",
-      loss_weights = c(0.8, 0.2)
-    )
   model
 }
 
