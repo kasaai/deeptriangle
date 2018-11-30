@@ -36,6 +36,6 @@ dt_tabulate_metrics <- function(data, metric = c("mape", "rmspe")) {
     tidyr::spread(.data$model,.data$ value) %>%
     dplyr::select(
       .data$lob, .data$Mack, .data$ODP,
-      .data$CIT, .data$LIT, .data$CSR, .data$DeepTriangle
+      .data$CIT, .data$LIT, .data$AutoML, .data$DeepTriangle
     )
 }
