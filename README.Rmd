@@ -24,10 +24,12 @@ This is the companion repository to the DeepTriangle paper. A preprint can be fo
 
 ## Reproducing experiments
 
+**Note: Due to changes in some library dependencies over time, the results may not reproduce exactly depending on when you installed TensorFlow, but the conclusions of the paper remain unchanged. The results below are generated using TensorFlow 1.10 and Keras 2.2.**
+
 To get started, either clone the repo and build the R package, or install with
 
 ``` r
-devtools::install_github("kevinykuo/deeptriangle)
+devtools::install_github("kevinykuo/deeptriangle")
 ```
 
 You will also need the [insurance](https://github.com/kevinykuo/insurance) package, which can be installed with
@@ -38,10 +40,12 @@ devtools::install_github("kevinykuo/insurance")
 
 The following lines of code will instantiate and fit the model for each line of business then combine the forecasts in a data frame:
 
-```{r, message = FALSE, cache = TRUE}
+```{r, message = FALSE, warning = FALSE, cache = FALSE}
 library(deeptriangle)
 library(tidyverse)
 library(keras)
+
+use_implementation("tensorflow")
 
 # set seed for reproducibility
 use_session_with_seed(2018)
@@ -54,24 +58,34 @@ lobs <- c("workers_compensation", "commercial_auto",
 predictions <- lobs %>%
   map(
     function(x) {
-      # clear session and instantiate model
-      k_clear_session()
+      # reinstantiate model
       model <- dt_model()
-
+      
+      model %>%
+        keras::compile(
+          optimizer = keras::optimizer_adam(amsgrad = TRUE),
+          loss = "mae",
+          loss_weights = c(0.8, 0.2)
+      )
+      
       c(training_data, validation_data, full_training_data) %<-%
         dt_train_validation_split(data[[x]])
-
+      
       message("Training - ", x)
-
+      
       # determine number of epochs
       epochs_to_train <- dt_optimize_epochs(
         model, training_data, validation_data
       )
-
-      # clear session and reinstantiate model
-      k_clear_session()
+      
       model <- dt_model()
-
+      
+      model %>% keras::compile(
+        optimizer = keras::optimizer_adam(amsgrad = TRUE),
+        loss = "mae",
+        loss_weights = c(0.8, 0.2)
+      )
+      
       # fit model to all training data
       history <- model %>%
         fit(x = full_training_data$x,
@@ -86,9 +100,10 @@ predictions <- lobs %>%
 
 We can then compute performance metrics...
 
-```{r}
+```{r, message = FALSE}
 model_results <- dt_compute_metrics(predictions) %>%
   bind_rows(stochastic_model_results) %>%
+  bind_rows(read_csv("analysis/automl_results.csv")) %>%
   gather(metric, value, mape, rmspe)
 ```
 
@@ -110,9 +125,9 @@ To create actual vs. predicted plots, use the `dt_plot_predictions()` function.
 # devtools::install_github("thomasp85/patchwork")
 library(patchwork)
 paid_plot <- dt_plot_predictions(predictions, "337", "workers_compensation",
-                    "paid_loss")
+                                 "paid_loss")
 case_plot <- dt_plot_predictions(predictions, "337", "workers_compensation",
-                    "claims_outstanding")
+                                 "claims_outstanding")
 paid_plot + case_plot + plot_layout(ncol = 1)
 ```
 
