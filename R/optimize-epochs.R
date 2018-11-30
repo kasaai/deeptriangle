@@ -7,6 +7,7 @@
 #' @export
 dt_optimize_epochs <- function(model, training_data, validation_data, batch_size = 128) {
   custom_stopping_callback <- dt_early_stopping()
+
   history <- model %>%
     keras::fit(x = training_data$x,
         y = training_data$y,
