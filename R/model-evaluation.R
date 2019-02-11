@@ -8,8 +8,10 @@ dt_compute_metrics <- function(predictions) {
       .data$development_lag == 10,
       .data$type %in% c("cumulative_paid_loss", "predicted_cumulative_loss")
     ) %>%
-    dplyr::group_by(.data$lob, .data$group_code, .data$type) %>%
+    dplyr::group_by(.data$lob, .data$group_code, .data$type, .data$run_id) %>%
     dplyr::summarize(ultimate = sum(.data$value)) %>%
+    dplyr::group_by(.data$lob, .data$group_code, .data$type) %>%
+    dplyr::summarize(ultimate = mean(.data$ultimate)) %>%
     tidyr::spread(.data$type, .data$ultimate) %>%
     dplyr::mutate(
       pct_error = (.data$predicted_cumulative_loss - .data$cumulative_paid_loss) /

@@ -21,26 +21,36 @@ dt_plot_predictions <- function(
     dplyr::mutate(value = .data$value / .data$earned_premium_net)
 
   predictions %>%
-    dplyr::filter(.data$group_code == !!group_code,
-                  .data$type == type_actual,
-                  .data$lob == !!lob) %>%
-    ggplot2::ggplot(ggplot2::aes_(x = ~development_lag, y = ~value, shape = ~obs_type,
-                                  color = ~obs_type)) +
-    ggplot2::geom_point() +
-    ggplot2::facet_wrap(~ accident_year, nrow = 2) +
-    ggplot2::theme_light() +
-    ggplot2::geom_point(data = dplyr::filter(predictions,
-                                             .data$group_code == !!group_code,
-                                             .data$type == type_prediction,
-                                             .data$lob == !!lob,
-                                             .data$calendar_year > 1997)) +
-    ggplot2::scale_shape_manual(values = c(1, 19, 3)) +
-    ggplot2::scale_color_manual(values = c("black", "black", "red")) +
-    ggplot2::scale_x_continuous(breaks = c(2, 4, 6, 8, 10)) +
-    ggplot2::scale_y_continuous(breaks = seq(0, 2, by = 0.2)) +
-    # ggplot2::coord_fixed(ratio = 10, xlim = c(0, 10), ylim = c(0, 1.5)) +
-    ggplot2::theme(legend.title=ggplot2::element_blank()) +
-    ggplot2::ylab(y_lab) +
-    ggplot2::labs(x = "Development Lag")
+    filter(
+      .data$group_code == !!group_code,
+      .data$type == type_prediction,
+      .data$lob == !!lob
+    ) %>%
+    mutate(run_id = as.character(.data$run_id)) %>%
+    ggplot(aes_(x = ~development_lag, y = ~value)) +
+    ggfan::geom_fan(intervals = c(0.05, 0.25, 0.5, 0.75, 0.95)) + scale_fill_distiller(name = "Pred. qtiles") +
+    stat_summary(fun.y = "mean", geom="line", linetype = "dashed", alpha = 0.5, aes(color = "mean")) +
+    scale_color_manual("Mean pred.", values=c("mean" = "blue"), label = NULL) +
+    facet_wrap(~accident_year, nrow = 2) +
+    guides(
+      shape = guide_legend(title = "Actual")
+    ) +
+    geom_point(
+      mapping = ggplot2::aes_(x = ~development_lag, y = ~value, shape = ~obs_type),
+      data = predictions %>%
+        filter(
+          .data$group_code == !!group_code,
+          .data$type == type_actual,
+          .data$lob == !!lob
+        ) %>%
+        filter(.data$run_id == 1),
+      inherit.aes = FALSE
+    ) +
+    scale_shape_manual(values = c(1, 19)) +
+    scale_x_continuous(breaks = c(2, 4, 6, 8, 10)) +
+    scale_y_continuous(breaks = seq(0, 2, by = 0.2)) +
+    ylab(y_lab) +
+    labs(x = "Development Lag") +
+    theme_light()
 
 }
