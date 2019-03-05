@@ -28,12 +28,18 @@ dt_plot_predictions <- function(
     ) %>%
     mutate(run_id = as.character(.data$run_id)) %>%
     ggplot(aes_(x = ~development_lag, y = ~value)) +
-    ggfan::geom_fan(intervals = c(0.05, 0.25, 0.5, 0.75, 0.95)) + scale_fill_distiller(name = "Pred. qtiles") +
-    stat_summary(fun.y = "mean", geom="line", linetype = "dashed", alpha = 0.5, aes(color = "mean")) +
-    scale_color_manual("Mean pred.", values=c("mean" = "blue"), label = NULL) +
+    ggfan::geom_interval(
+      aes(linetype = ..Interval..),
+      intervals = c(0.9)) +
+    stat_summary(fun.y = "mean", geom="line", alpha = 0.5, aes(linetype = "mean")) +
+    scale_linetype_manual(
+      "Predicted",
+      values = c("mean" = "solid", "0.9" = "dashed"),
+      label = c("95% interval", "mean")
+    ) +
     facet_wrap(~accident_year, nrow = 2) +
     guides(
-      shape = guide_legend(title = "Actual")
+      shape = guide_legend(title = "Actual", order = 1)
     ) +
     geom_point(
       mapping = ggplot2::aes_(x = ~development_lag, y = ~value, shape = ~obs_type),
@@ -52,5 +58,4 @@ dt_plot_predictions <- function(
     ylab(y_lab) +
     labs(x = "Development Lag") +
     theme_light()
-
 }
