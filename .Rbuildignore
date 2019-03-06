@@ -6,3 +6,5 @@
 ^internal$
 ^README_cache$
 ^\.travis\.yml$
+^analysis$
+^output$
