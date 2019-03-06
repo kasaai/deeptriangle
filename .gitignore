@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 .DS_Store
+internal
+output
+README_cache
