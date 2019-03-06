@@ -1,4 +1,4 @@
-utils::globalVariables(c("type_actual", "type_prediction"))
+utils::globalVariables(c("type_actual", "type_prediction", "..Interval.."))
 
 #' Plot predictions
 #'
