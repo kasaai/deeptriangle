@@ -10,15 +10,16 @@ License: Apache License (>= 2.0)
 Encoding: UTF-8
 Depends:
     R (>= 3.2)
-Imports: keras,
-  magrittr,
-  zeallot,
-  R6,
-  dplyr,
-  tidyr,
-  rlang,
-  ggplot2,
-  purrr,
-  ggfan
+Imports: 
+    keras,
+    magrittr,
+    zeallot,
+    R6,
+    dplyr,
+    tidyr,
+    rlang,
+    ggplot2,
+    purrr,
+    ggfan
 LazyData: true
 RoxygenNote: 6.1.1
