@@ -225,8 +225,9 @@ We implement DeepTriangle using the keras R package [@chollet2017kerasR] with th
 ## Results and discussion
 
 ```{r, echo = FALSE, results="asis", message = FALSE}
-predictions <- feather::read_feather("data/predictions.feather")
-automl_results <- read_csv("data/automl_results.csv")
+data_dir <- file.path(here::here(), "datasets")
+predictions <- feather::read_feather(file.path(data_dir, "predictions.feather"))
+automl_results <- read_csv(file.path(data_dir, "automl_results.csv"))
 model_results <- dt_compute_metrics(predictions) %>%
   bind_rows(stochastic_model_results) %>%
   bind_rows(automl_results) %>%
