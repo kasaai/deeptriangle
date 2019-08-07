@@ -6,8 +6,12 @@ status](https://travis-ci.org/kasaai/deeptriangle.svg?branch=master)](https://tr
 
 # DeepTriangle: A Deep Learning Approach to Loss Reserving
 
-This is the companion repository to the DeepTriangle paper. A preprint
-can be found at <https://arxiv.org/abs/1804.09253>.
+This is the companion repository to the DeepTriangle paper.
+
+A preview of the current draft can be found at
+<https://kasaai.github.io/deeptriangle/manuscript.pdf>.
+
+A citeable preprint can be found at <https://arxiv.org/abs/1804.09253>.
 
 ## Experiments
 
