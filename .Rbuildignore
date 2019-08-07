@@ -8,3 +8,5 @@
 ^\.travis\.yml$
 ^analysis$
 ^output$
+^manuscript$
+^datasets$
