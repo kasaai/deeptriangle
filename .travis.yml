@@ -10,8 +10,7 @@ cache:
     - $HOME/.TinyTeX
     - $TRAVIS_BUILD_DIR/datasets
 
-install:
-- R CMD install .
+install: "noop"
 
 script:
 - Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
