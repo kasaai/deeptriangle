@@ -12,7 +12,7 @@ cache:
 
 script:
 - R CMD build .
-- R CMD install .
+- R CMD INSTALL .
 - Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'piggyback::pb_download(file = c("datasets/automl_results.csv", "datasets/predictions.tar.gz"))'
