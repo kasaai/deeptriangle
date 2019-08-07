@@ -10,14 +10,13 @@ cache:
     - $HOME/.TinyTeX
     - $TRAVIS_BUILD_DIR/datasets
 
-install: "noop"
-
 script:
 - Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'piggyback::pb_download(file = c("datasets/automl_results.csv", "datasets/predictions.tar.gz"))'
 - Rscript -e 'if (!file.exists("datasets/predictions.feather")) untar("datasets/predictions.feather", exdir = "datasets/")'
 - Rscript -e 'dir.create("manuscript/dist")'
+- Rscript -e 'library(deeptriangle)'
 - Rscript -e 'rmarkdown::render("manuscript/manuscript.Rmd", output_dir = "manuscript/dist/")'
 
 deploy:
