@@ -6,7 +6,8 @@
 internal
 output
 README_cache
-manuscript/data
 manuscript/manuscript_files
 manuscript/manuscript.pdf
 manuscript/manuscript.tex
+manuscript/dist
+datasets
