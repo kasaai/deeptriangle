@@ -1,7 +1,7 @@
 Package: deeptriangle
 Type: Package
 Title: DeepTriangle
-Version: 0.2.0
+Version: 0.2.0.9000
 Authors@R: person("Kevin", "Kuo", email = "kevin.kuo@rstudio.com", 
                   role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7803-7901"))
 Maintainer: Kevin Kuo <kevin.kuo@rstudio.com>
@@ -21,5 +21,17 @@ Imports:
     ggplot2,
     purrr,
     ggfan
+Suggests:
+    here,
+    readr,
+    cowplot,
+    feather,
+    piggyback,
+    rmarkdown,
+    tinytex,
+    rticles,
+    kableExtra
 LazyData: true
 RoxygenNote: 6.1.1
+Remotes:
+    ropensci/piggyback

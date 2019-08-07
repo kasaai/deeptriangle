@@ -2,4 +2,27 @@
 
 language: R
 sudo: false
-cache: packages
+
+cache:
+  packages: yes
+  directories:
+    - $HOME/bin
+    - $HOME/.TinyTeX
+    - $TRAVIS_BUILD_DIR/datasets
+
+script:
+- R CMD build .
+- R CMD INSTALL .
+- Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
+- Rscript -e 'piggyback::pb_download(file = c("datasets/automl_results.csv", "datasets/predictions.tar.gz"))'
+- Rscript -e 'if (!file.exists("datasets/predictions.feather")) untar("datasets/predictions.tar.gz", exdir = "datasets/")'
+- Rscript -e 'dir.create("manuscript/dist")'
+- Rscript -e 'rmarkdown::render("manuscript/manuscript.Rmd", output_dir = "manuscript/dist/")'
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
+  local_dir: manuscript/dist
