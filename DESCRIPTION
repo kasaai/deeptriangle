@@ -29,7 +29,8 @@ Suggests:
     piggyback,
     rmarkdown,
     tinytex,
-    rticles
+    rticles,
+    kableExtra
 LazyData: true
 RoxygenNote: 6.1.1
 Remotes:
