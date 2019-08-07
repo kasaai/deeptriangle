@@ -10,6 +10,9 @@ cache:
     - $HOME/.TinyTeX
     - $TRAVIS_BUILD_DIR/datasets
 
+install:
+- R CMD install .
+
 script:
 - Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
 - Rscript -e 'tinytex::tlmgr_install("cm-super")'
