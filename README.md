@@ -2,7 +2,7 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 [![Travis build
-status](https://travis-ci.org/kevinykuo/deeptriangle.svg?branch=master)](https://travis-ci.org/kevinykuo/deeptriangle)
+status](https://travis-ci.org/kasaai/deeptriangle.svg?branch=master)](https://travis-ci.org/kasaai/deeptriangle)
 
 # DeepTriangle: A Deep Learning Approach to Loss Reserving
 
@@ -15,15 +15,14 @@ To get started, either clone the repo and build the R package, or
 install with
 
 ``` r
-devtools::install_github("kevinykuo/deeptriangle")
+devtools::install_github("kasaai/deeptriangle")
 ```
 
-You will also need the
-[insurance](https://github.com/kevinykuo/insurance) package, which can
-be installed with
+You will also need the [insurance](https://github.com/kasaai/insurance)
+package, which can be installed with
 
 ``` r
-devtools::install_github("kevinykuo/insurance")
+devtools::install_github("kasaai/insurance")
 ```
 
 The experiments can be found in `analysis/main.R`. It is recommended
@@ -32,11 +31,11 @@ that you use a GPU since many instances of the models are fit.
 For convenience, we provide a `predictions.feather` file in the release.
 
 ``` r
-predictions <- feather::read_feather("output/predictions.feather")
+predictions <- feather::read_feather("datasets/predictions.feather")
 
 model_results <- dt_compute_metrics(predictions) %>%
   bind_rows(stochastic_model_results) %>%
-  bind_rows(read_csv("analysis/automl_results.csv")) %>%
+  bind_rows(read_csv("datasets/automl_results.csv")) %>%
   gather(metric, value, mape, rmspe)
 
 dt_tabulate_metrics(model_results, metric = "mape") %>%
