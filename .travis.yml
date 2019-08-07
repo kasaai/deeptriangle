@@ -14,7 +14,6 @@ script:
 - R CMD build .
 - R CMD INSTALL .
 - Rscript -e 'if (tinytex::tinytex_root() == "") tinytex::install_tinytex()'
-- Rscript -e 'tinytex::tlmgr_install("cm-super")'
 - Rscript -e 'piggyback::pb_download(file = c("datasets/automl_results.csv", "datasets/predictions.tar.gz"))'
 - Rscript -e 'if (!file.exists("datasets/predictions.feather")) untar("datasets/predictions.tar.gz", exdir = "datasets/")'
 - Rscript -e 'dir.create("manuscript/dist")'
