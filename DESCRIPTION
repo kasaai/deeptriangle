@@ -28,7 +28,8 @@ Suggests:
     feather,
     piggyback,
     rmarkdown,
-    tinytex
+    tinytex,
+    rticles
 LazyData: true
 RoxygenNote: 6.1.1
 Remotes:
