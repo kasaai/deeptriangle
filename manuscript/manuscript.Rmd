@@ -11,12 +11,16 @@ affiliation:
 # firstnote to eighthnote
 correspondence: |
   kevin@kasa.ai
-journal: preprint
+journal: risks 
 type: article
 status: submit
 bibliography: mybibfile.bib
 abstract: |
    We propose a novel approach for loss reserving based on deep neural networks. The approach allows for joint modeling of paid losses and claims outstanding, and incorporation of heterogeneous inputs. We validate the models on loss reserving data across lines of business, and show that they improve on the predictive accuracy of existing stochastic methods. The models require minimal feature engineering and expert input, and can be automated to produce forecasts more frequently than manual workflows.
+acknowledgement: |
+  We thank Sigrid Keydana, Ronald Richman, and the volunteers on the Casualty Actuarial Society Committee on Reserves (CASCOR) who helped to improve the paper through helpful discussions.
+conflictsofinterest: |
+  The author declares no conflict of interest.
 keywords: |
   loss reserving; machine learning; neural networks 
 output: rticles::mdpi_article
@@ -36,7 +40,7 @@ In the loss reserving exercise for property and casualty insurers, actuaries are
 
 There can be time lags both for reporting of claims, where the insurer is not notified of a loss until long after it has occurred, and for final development of claims, where payments continue long after the loss has been reported. Also, the amounts of claims are uncertain before they have fully developed. These factors contribute to the difficulty of the loss reserving problem, for which extensive literature exists and active research is being done. We refer the reader to @england2002stochastic for a survey of the problem and existing techniques.
 
-Deep learning has garnered increasing interest in recent years due to successful applications in many fields [@lecun2015deep] and has recently made its way into the loss reserving literature. @wuthrich2018neural augments the traditional chain ladder method with neural networks to incorporate claims features, and @gabrielli2018neural embeds the over-dispersed Poisson (ODP) model into a neural network.
+Deep learning has garnered increasing interest in recent years due to successful applications in many fields [@lecun2015deep] and has recently made its way into the loss reserving literature. @wuthrich2018neural augments the traditional chain ladder method with neural networks to incorporate claims features, @gabrielli2018individual utilizes neural networks to syntheisze claims data, and @gabrielli2018neural and @gabrielli2019neural embeds classical parametric loss reserving models into neural networks.
 
 In developing our framework, which we call DeepTriangle, we also draw inspiration from the existing stochastic reserving literature: @quarg2004munich utilize incurred loss along with paid loss data, @miranda2012double incorporate claim count information in addition to paid losses, and @avanzi2016stochastic consider the dependence between lines of business within an insurer's portfolio.
 
@@ -44,7 +48,7 @@ The approach that we develop differs from existing works in many ways, and has t
 
 # Neural network preliminaries
 
-For comprehensive treatments of neural network mechanics and implementation, we refer the reader to @goodfellow2016deep and @chollet2018deep. In order to establish common terminology used in this paper, we present a brief overview in this section.
+For comprehensive treatments of neural network mechanics and implementation, we refer the reader to @goodfellow2016deep and @chollet2018deep. A more actuarially oriented discussion can be found in @wuthrich2019data. In order to establish common terminology used in this paper, we present a brief overview in this section.
 
 ```{r feedforward, out.width = "80%", fig.cap = "Feedforward neural network.", fig.align="center", echo = FALSE}
 knitr::include_graphics("figures/feedforward.png")
@@ -73,7 +77,7 @@ Also, for the output layer $l = L$, we compute the prediction
 \hat{y} = h_j^{[L]} = g^{[L]}\left(\sum_k w_{jk}^{[L]}h_k^{[L-1]} + b_j^{[L]}\right).
 \end{equation}
 
-We can then think of a neural network as a sequence of function compositions $f = f_L \circ f_{L-1} \circ \dots \circ f_1$ parameterized as $f(x; W^{[1]}, b^{[1]}, \dots, W^{[L]}, b^{[L]})$.
+We can then think of a neural network as a sequence of function compositions $f = f_L \circ f_{L-1} \circ \dots \circ f_1$ parameterized as $f(x; W^{[1]}, b^{[1]}, \dots, W^{[L]}, b^{[L]})$. Here, it should be mentioned that the activation functions $g^{[t]}$ are chosen to be nonlinear, except for possibly in the output layer. These nonlinearities are key to the success of neural networks, because otherwise we would have a trivial composition of linear models.
 
 Each neural network model is specified with a specific loss function, which is used to measure how close the model predictions are to the actual values. During model training, the parameters discussed above are iteratively updated in order to minimize the loss function. Each update of the parameters typically involves only a subset, or mini-batch, of the training data, and one complete pass through the training data, which includes many updates, is known as an epoch. Training a neural network often requires many passes through the data.
 
@@ -149,7 +153,7 @@ Here, $h^{<t>}$ and $x^{<t>}$ represent the activation and input values, respect
 \begin{equation}
 \sigma(x) = \frac{1}{1 + \exp(-x)}\label{eq:eq1}.
 \end{equation}
-$W_h$, $W_r$, $W_u$, $b_h$, $b_r$, and $b_u$ are the appropriately sized weight matrices and biases to be learned.
+$W_h$, $W_r$, $W_u$, $b_h$, $b_r$, and $b_u$ are the appropriately sized weight matrices and biases to be learned. Intuitively, the activations $h^{<t>}$ provide a way for the network to maintain state and "remember" values from early values of the input sequence. The values $\tilde{h}^{<t>}$ can be thought of as candidates to replace the current state, and $\Gamma_u^{<t>}$ determines the weighting between the previous state and the candidate state. We remark that although the GRU (and RNN in general) may seem opaque at first, they contain sequential instructions for updating weights just like vanilla feedforward neural networks (and can in fact be interpreted as such [@goodfellow2016deep]).
 
 We first encode the sequential predictor with a GRU to obtain a summary of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. Each timestep of the decoded sequence is then concatenated with the company embedding before being passed to two subnetworks, corresponding to the two prediction outputs, of fully connected layers, each of which shares weights across the timesteps.
 
@@ -165,7 +169,7 @@ Rectified linear unit (ReLU) [@nair2010rectified], defined as
 x \mapsto \max(0, x),
 \end{equation}
 
-is used as the activation function for the fully connected layers, including both of the output layers.
+is used as the activation function for the fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
 
 ## Deployment considerations
 
@@ -220,7 +224,7 @@ For optimization, we use the <span style="font-variant:small-caps;">AMSGrad</spa
 
 We implement DeepTriangle using the keras R package [@chollet2017kerasR] with the TensorFlow [@tensorflow2015-whitepaper] backend. Code for producing the experiment results is available online.[^1]
 
-[^1]: https://github.com/kevinykuo/deeptriangle
+[^1]: https://github.com/kasaai/deeptriangle
 
 ## Results and discussion
 
