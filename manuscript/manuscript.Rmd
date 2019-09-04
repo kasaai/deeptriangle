@@ -118,7 +118,7 @@ In DeepTriangle, each training sample is associated with an accident year-develo
 \begin{equation}
 (Y_{i,j},Y_{i,j+1},\dots,Y_{i,I - i + 1}), 
 \end{equation}
-where each $Y_{ij} = (P_{ij}, OS_{ij}) / NPE_{i}$, where $NPE_{i}$ denotes the net earned premium for accident year $i$. Working with loss ratios makes training more tractable by normalizing values into a similar scale.
+where each $Y_{ij} = (P_{ij} / NPE_{i}, OS_{ij} / NPE_{i})$, where $NPE_{i}$ denotes the net earned premium for accident year $i$. Working with loss ratios makes training more tractable by normalizing values into a similar scale.
 
 The predictor for the sample contains two components. The first component is the observed history as of the end of the calendar year associated with the cell:
 
