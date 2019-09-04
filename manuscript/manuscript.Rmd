@@ -91,7 +91,7 @@ knitr::include_graphics("figures/nn3.png")
 
 ## Training Data
 
-Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{ij}\}$ and $\{OS_{ij}\}$ denote the *incremental* paid losses and the *total* claims outstanding, respectively.
+Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{ij}\}$ and $\{OS_{ij}\}$ denote the *incremental* paid losses and the *total* claims outstanding, or case reserves, respectively.
 
 Then, at the end of calendar year $I$, we have access to the observed data
 
