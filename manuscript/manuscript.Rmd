@@ -81,15 +81,20 @@ We can then think of a neural network as a sequence of function compositions $f 
 
 Each neural network model is specified with a specific loss function, which is used to measure how close the model predictions are to the actual values. During model training, the parameters discussed above are iteratively updated in order to minimize the loss function. Each update of the parameters typically involves only a subset, or mini-batch, of the training data, and one complete pass through the training data, which includes many updates, is known as an epoch. Training a neural network often requires many passes through the data.
 
-# Neural architecture for loss reserving
+# Data and model architecture
 
-As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network with two prediction goals: claims outstanding and paid loss. We construct one model for each line of business and each model is trained on data from multiple companies.
+In this section, we discuss the dataset used for our experiments and the proposed model architecture.
 
-```{r dt, out.width = "100%", fig.cap = "DeepTriangle architecture. \\textit{Embed} denotes embedding layer, \\textit{GRU} denotes gated recurrent unit, \\textit{FC} denotes fully connected layer.", fig.align="center", echo = FALSE}
-knitr::include_graphics("figures/nn3.png")
-```
+## Data source
 
-## Training Data
+We use the National Association of Insurance Commissioners (NAIC) Schedule P triangles [@meyers2011loss]. The dataset corresponds to claims from accident years 1988-1997, with development experience of 10 years for each accident year. In Schedule P data, the data is aggregated into accident year-development year records.
+
+Following @meyers2015stochastic, we restrict ourselves to a subset of the data which covers four lines of business (commercial auto, private personal auto, workers' compensation, and other liability) and 50 companies in each line of business. This is done to facilitate comparison to existing results.
+
+We use the following variables from the dataset in our study: line of business, company code, accident year, development lag, incurred loss, cumulative paid loss, and net earned premium. Claims outstanding, for the purpose of this study, is derived as incurred loss less cumulative paid loss. The company code is a categorical variable that denotes which insurer the records are associated with.
+
+
+## Training/testing setup
 
 Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{ij}\}$ and $\{OS_{ij}\}$ denote the *incremental* paid losses and the *total* claims outstanding, or case reserves, respectively.
 
@@ -111,6 +116,8 @@ Assume that we are interested in development through the $I$th development year;
 \widehat{UL}_i = \left(\sum_{j = 1}^{I - i + 1} P_{ij}\right) + \left(\sum_{j = I - i + 2}^I \widehat{P}_{ij}\right).
 \end{equation}
 
+In our case, data as of year end 1997 is used for training. WE then evaluate predictive performance on the development year 10 cumulative paid losses.
+
 ## Response and predictor variables
 
 In DeepTriangle, each training sample is associated with an accident year-development year pair, which we refer to thereinafter as a *cell*. The response for the sample associated with accident year $i$ and development year $j$ is the sequence
@@ -131,7 +138,11 @@ The second component of the predictor is the company identifier associated with 
 
 ## Model Architecture
 
-DeepTriangle utilizes a sequence-to-sequence architecture inspired by @sutskever2014sequence and @DBLP:journals/corr/SrivastavaMS15.
+As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network utilizing a sequence-to-sequence architecture [@sutskever2014sequence; @DBLP:journals/corr/SrivastavaMS15] with two prediction goals: claims outstanding and paid loss. We construct one model for each line of business and each model is trained on data from multiple companies.
+
+```{r dt, out.width = "100%", fig.cap = "DeepTriangle architecture. \\textit{Embed} denotes embedding layer, \\textit{GRU} denotes gated recurrent unit, \\textit{FC} denotes fully connected layer.", fig.align="center", echo = FALSE}
+knitr::include_graphics("figures/nn3.png")
+```
 
 We utilize gated recurrent units (GRU) [@chung2014empirical], which is a type of recurrent neural network (RNN) building block that is appropriate for sequential data. A graphical representation of a GRU is shown in Figure \ref{fig:gru}, and the associated equations are as follows:
 
@@ -185,16 +196,6 @@ Insurers often have access to richer information than is available in regulatory
 
 Experiments
 ===========
-
-## Data
-
-We validate the modeling approach on data from National Association of Insurance Commissioners (NAIC) Schedule P triangles [@meyers2011loss]. The dataset corresponds to claims from accident years 1988-1997, with development experience of 10 years for each accident year.
-
-Following @meyers2015stochastic, we restrict ourselves to a subset of the data which covers four lines of business (commercial auto, private personal auto, workers' compensation, and other liability) and 50 companies in each line of business. This is done to facilitate comparison to existing results.
-
-We use the following variables from the dataset in our study: line of business, company code, accident year, development lag, incurred loss, cumulative paid loss, and net earned premium. Claims outstanding, for the purpose of this study, is derived as incurred loss less cumulative paid loss.
-
-We use data as of year end 1997 for training, and evaluate predictive performance on the development year 10 ultimates.
 
 ## Evaluation metrics
 
