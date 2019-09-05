@@ -46,7 +46,7 @@ In developing our framework, which we call DeepTriangle, we also draw inspiratio
 
 The approach that we develop differs from existing works in many ways, and has the following advantages. First, it enables joint modeling of paid losses and claims outstanding for multiple companies simultaneously in a single model. In fact, the architecture can also accommodate arbitrary additional inputs, such as claim count data and economic indicators, should they be available to the modeler. Second, it requires no manual input during model updates or forecasting, which means that predictions can be generated more frequently than traditional processes, and, in turn, allows management to react to changes in the portfolio sooner.
 
-# Neural network preliminaries
+# Neural network preliminaries [#prelim]
 
 For comprehensive treatments of neural network mechanics and implementation, we refer the reader to @goodfellow2016deep and @chollet2018deep. A more actuarially oriented discussion can be found in @wuthrich2019data. In order to establish common terminology used in this paper, we present a brief overview in this section.
 
@@ -155,9 +155,11 @@ Here, $h^{<t>}$ and $x^{<t>}$ represent the activation and input values, respect
 \end{equation}
 $W_h$, $W_r$, $W_u$, $b_h$, $b_r$, and $b_u$ are the appropriately sized weight matrices and biases to be learned. Intuitively, the activations $h^{<t>}$ provide a way for the network to maintain state and "remember" values from early values of the input sequence. The values $\tilde{h}^{<t>}$ can be thought of as candidates to replace the current state, and $\Gamma_u^{<t>}$ determines the weighting between the previous state and the candidate state. We remark that although the GRU (and RNN in general) may seem opaque at first, they contain sequential instructions for updating weights just like vanilla feedforward neural networks (and can in fact be interpreted as such [@goodfellow2016deep]).
 
-We first encode the sequential predictor with a GRU to obtain a summary of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. Each timestep of the decoded sequence is then concatenated with the company embedding before being passed to two subnetworks, corresponding to the two prediction outputs, of fully connected layers, each of which shares weights across the timesteps.
+We first encode the sequential predictor with a GRU to obtain a summary encoding of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU that outputs its hidden state for each time step. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. For both the encoder and decoder GRU modules, we use 128 hidden units and a dropout rate of 0.2. Here, dropout refers to the regime where, during training, we randomly set the output of the hidden units to zero with a specified probability, in order to reduce overfitting [@srivastava2014dropout].
 
 The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. This mapping mechanism is part of the neural network and hence is learned during the training of the network instead of a separate data preprocessing step. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
+
+Each timestep of the decoded sequence from the GRU decoder is then concatenated with the company embedding output. The concatenated values are then passed to two subnetworks of fully connected layers, each of which shares weights across the timesteps. The two subnetworks correspond to the paid loss and case outstanding predictions, respectively, and each consist of a hidden layer of 64 units with a dropout rate of 0.2, and an output layer of 1 unit to represent a scalar.
 
 ```{r gru, out.width = "70%", fig.cap = "Gated recurrent unit.", fig.align="center", echo = FALSE, fig.pos="h"}
 knitr::include_graphics("figures/gru.png")
@@ -169,7 +171,7 @@ Rectified linear unit (ReLU) [@nair2010rectified], defined as
 x \mapsto \max(0, x),
 \end{equation}
 
-is used as the activation function for the fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
+is used as the activation function (which we denoted as $g$ in Section \@ref(prelim)) for all fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
 
 ## Deployment considerations
 
