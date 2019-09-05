@@ -46,7 +46,7 @@ In developing our framework, which we call DeepTriangle, we also draw inspiratio
 
 The approach that we develop differs from existing works in many ways, and has the following advantages. First, it enables joint modeling of paid losses and claims outstanding for multiple companies simultaneously in a single model. In fact, the architecture can also accommodate arbitrary additional inputs, such as claim count data and economic indicators, should they be available to the modeler. Second, it requires no manual input during model updates or forecasting, which means that predictions can be generated more frequently than traditional processes, and, in turn, allows management to react to changes in the portfolio sooner.
 
-# Neural network preliminaries [#prelim]
+# Neural network preliminaries {#prelim}
 
 For comprehensive treatments of neural network mechanics and implementation, we refer the reader to @goodfellow2016deep and @chollet2018deep. A more actuarially oriented discussion can be found in @wuthrich2019data. In order to establish common terminology used in this paper, we present a brief overview in this section.
 
