@@ -23,7 +23,9 @@ conflictsofinterest: |
   The author declares no conflict of interest.
 keywords: |
   loss reserving; machine learning; neural networks 
-output: rticles::mdpi_article
+output:
+  bookdown::pdf_book:
+    base_format: rticles::mdpi_article
 ---
 
 ```{r setup, echo = FALSE, message = FALSE, warning=FALSE}
@@ -46,7 +48,9 @@ In developing our framework, which we call DeepTriangle, we also draw inspiratio
 
 The approach that we develop differs from existing works in many ways, and has the following advantages. First, it enables joint modeling of paid losses and claims outstanding for multiple companies simultaneously in a single model. In fact, the architecture can also accommodate arbitrary additional inputs, such as claim count data and economic indicators, should they be available to the modeler. Second, it requires no manual input during model updates or forecasting, which means that predictions can be generated more frequently than traditional processes, and, in turn, allows management to react to changes in the portfolio sooner.
 
-# Neural network preliminaries {#prelim}
+The rest of the paper is organized as follows: Section \@ref(prelim) provides a brief overview of neural network terminology, Section \@ref(data-arch) discusses the dataset used and introduces the proposed neural network architecture, Section \@ref(exps) defines the performance metrics we use to benchmark our models and discuss the results, and Section \@ref(conclusion) concludes.
+
+# Neural Network Preliminaries {#prelim}
 
 For comprehensive treatments of neural network mechanics and implementation, we refer the reader to @goodfellow2016deep and @chollet2018deep. A more actuarially oriented discussion can be found in @wuthrich2019data. In order to establish common terminology used in this paper, we present a brief overview in this section.
 
@@ -81,20 +85,19 @@ We can then think of a neural network as a sequence of function compositions $f 
 
 Each neural network model is specified with a specific loss function, which is used to measure how close the model predictions are to the actual values. During model training, the parameters discussed above are iteratively updated in order to minimize the loss function. Each update of the parameters typically involves only a subset, or mini-batch, of the training data, and one complete pass through the training data, which includes many updates, is known as an epoch. Training a neural network often requires many passes through the data.
 
-# Data and model architecture
+# Data and Model Architecture {#data-arch}
 
 In this section, we discuss the dataset used for our experiments and the proposed model architecture.
 
-## Data source
+## Data Source
 
-We use the National Association of Insurance Commissioners (NAIC) Schedule P triangles [@meyers2011loss]. The dataset corresponds to claims from accident years 1988-1997, with development experience of 10 years for each accident year. In Schedule P data, the data is aggregated into accident year-development year records.
+We use the National Association of Insurance Commissioners (NAIC) Schedule P triangles [@meyers2011loss]. The dataset corresponds to claims from accident years 1988-1997, with development experience of 10 years for each accident year. In Schedule P data, the data is aggregated into accident year-development year records. The procedure for constructing the dataset is detailed in @meyers2015stochastic.
 
 Following @meyers2015stochastic, we restrict ourselves to a subset of the data which covers four lines of business (commercial auto, private personal auto, workers' compensation, and other liability) and 50 companies in each line of business. This is done to facilitate comparison to existing results.
 
 We use the following variables from the dataset in our study: line of business, company code, accident year, development lag, incurred loss, cumulative paid loss, and net earned premium. Claims outstanding, for the purpose of this study, is derived as incurred loss less cumulative paid loss. The company code is a categorical variable that denotes which insurer the records are associated with.
 
-
-## Training/testing setup
+## Training/Testing Setup
 
 Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{ij}\}$ and $\{OS_{ij}\}$ denote the *incremental* paid losses and the *total* claims outstanding, or case reserves, respectively.
 
@@ -118,7 +121,7 @@ Assume that we are interested in development through the $I$th development year;
 
 In our case, data as of year end 1997 is used for training. WE then evaluate predictive performance on the development year 10 cumulative paid losses.
 
-## Response and predictor variables
+## Response and Predictor Variables
 
 In DeepTriangle, each training sample is associated with an accident year-development year pair, which we refer to thereinafter as a *cell*. The response for the sample associated with accident year $i$ and development year $j$ is the sequence
 
@@ -132,19 +135,25 @@ The predictor for the sample contains two components. The first component is the
 \begin{equation}
 (Y_{i,1}, Y_{i,2}, \dots, Y_{i,j-1}).
 \end{equation}
-In other words, for each accident year and at each evaluation date for which we have data, we attempt to predict future development of the accident year's paid losses and claims outstanding based on the observed history as of that date. While we are ultimately interested in $P_{ij}$, the paid losses, we include claims outstanding as an auxiliary output of the model. Since the two quantities are related, we expect to obtain better performance by jointly training than predicting each quantity independently [@collobert2008unified].
+In other words, for each accident year and at each evaluation date for which we have data, we attempt to predict future development of the accident year's paid losses and claims outstanding based on the observed history as of that date. While we are ultimately interested in $P_{ij}$, the paid losses, we include claims outstanding as an auxiliary output of the model. We elaborate on the reasoning behind this approach in the next section.
 
 The second component of the predictor is the company identifier associated with the experience. Because we include experience from multiple companies in each training iteration, we need a way to differentiate the data from different companies. We discuss handling of the company identifier in more detail in the next section. 
 
 ## Model Architecture
 
-As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network utilizing a sequence-to-sequence architecture [@sutskever2014sequence; @DBLP:journals/corr/SrivastavaMS15] with two prediction goals: claims outstanding and paid loss. We construct one model for each line of business and each model is trained on data from multiple companies.
+As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network utilizing a sequence-to-sequence architecture [@sutskever2014sequence; @DBLP:journals/corr/SrivastavaMS15] with two prediction goals: paid loss and claims outstanding. We construct one model for each line of business and each model is trained on data from multiple companies.
+
+### Multi-task learning
+
+Since the two target quantities, paid loss and claims outstanding, are related, we expect to obtain better performance by jointly training than predicting each quantity independently [@caruana1997multitask]. While @caruana1997multitask contains detailed discourse on the specific mechanisms of multi-task learning, we provide some heuristics on why it may improve predictions: by utilizing the reponse data from claims outstanding, we are effectively increasing the training data size since we are providing more signals to the learning algorithm; there may be hidden features, useful for predicting paid losses, that are more easily learned by trying to predict claims outstanding; also, by trying to predict claims outstanding during training, we are imposing a bias towards neural network weights which perform that task well, which lessens the likelihood of arriving at a model that overfits to random noise.
+
+### Sequential input processing
 
 ```{r dt, out.width = "100%", fig.cap = "DeepTriangle architecture. \\textit{Embed} denotes embedding layer, \\textit{GRU} denotes gated recurrent unit, \\textit{FC} denotes fully connected layer.", fig.align="center", echo = FALSE}
 knitr::include_graphics("figures/nn3.png")
 ```
 
-We utilize gated recurrent units (GRU) [@chung2014empirical], which is a type of recurrent neural network (RNN) building block that is appropriate for sequential data. A graphical representation of a GRU is shown in Figure \ref{fig:gru}, and the associated equations are as follows:
+For handling the time series of paid losses and claims outstanding, we utilize gated recurrent units (GRU) [@chung2014empirical], which is a type of recurrent neural network (RNN) building block that is appropriate for sequential data. A graphical representation of a GRU is shown in Figure \ref{fig:gru}, and the associated equations are as follows:
 
 \begin{equation}
 \tilde{h}^{<t>} = \tanh(W_h[\Gamma_r h^{<t-1>}, x^{<t>}] + b_h)
@@ -168,7 +177,11 @@ $W_h$, $W_r$, $W_u$, $b_h$, $b_r$, and $b_u$ are the appropriately sized weight 
 
 We first encode the sequential predictor with a GRU to obtain a summary encoding of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU that outputs its hidden state for each time step. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. For both the encoder and decoder GRU modules, we use 128 hidden units and a dropout rate of 0.2. Here, dropout refers to the regime where, during training, we randomly set the output of the hidden units to zero with a specified probability, in order to reduce overfitting [@srivastava2014dropout].
 
+### Company Code Embeddings
+
 The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. In other words, the embedding value for each company is parameterized by a vector consisting of 49 real numbers. This mapping mechanism is part of the neural network and hence is learned during the training of the network, instead of a separate data preprocessing step. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
+
+### Fully connected layers and outputs
 
 Each timestep of the decoded sequence from the GRU decoder is then concatenated with the company embedding output. The concatenated values are then passed to two subnetworks of fully connected layers, each of which shares weights across the timesteps. The two subnetworks correspond to the paid loss and case outstanding predictions, respectively, and each consist of a hidden layer of 64 units with a dropout rate of 0.2, and an output layer of 1 unit to represent a scalar.
 
@@ -184,7 +197,7 @@ x \mapsto \max(0, x),
 
 is used as the activation function (which we denoted as $g$ in Section \@ref(prelim)) for all fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
 
-## Deployment considerations
+## Deployment Considerations
 
 While one may not have access to the latest experience data of competitors, the company code predictor can be utilized to incorporate data from companies within a group insurer. During training, the relationships among the companies are inferred based on historical development behavior. This approach provides an automated and objective alternative to manually aggregating, or clustering, the data based on knowledge of the degree of homogeneity among the companies.
 
@@ -194,10 +207,9 @@ Since the model outputs predictions for each triangle cell, one can calculate th
 
 Insurers often have access to richer information than is available in regulatory filings, which underlies the experiments in this paper. For example, in addition to paid and incurred losses, one may include claim count triangles so that the model can also learn from, and predict, frequency information.
 
-Experiments
-===========
+# Experiments {#exps}
 
-## Evaluation metrics
+## Evaluation Metrics
 
 We aim to produce scalar metrics to evaluate the performance of the model on each line of business. To this end, for each company and each line of business, we calculate the actual and predicted ultimate losses as of development year 10, for all accident years combined, then compute the root mean squared percentage error (RMSPE) and mean absolute percentage error (MAPE) over companies in each line of business. Percentage errors are used in order to have unit-free measures for comparing across companies with vastly different sizes of portfolios. Formally, if $\mathcal{C}_l$ is the set of companies in line of business $l$,
 
@@ -215,7 +227,7 @@ where $\widehat{UL}_C$ and $UL_C$ are the predicted and actual cumulative ultima
 
 An alternative approach for evaluation could involve weighting the company results by the associated earned premium or using dollar amounts. However, due to the distribution of company sizes in the dataset, the weights would concentrate on a handful of companies. Hence, to obtain a more balanced evaluation, we choose to report the unweighted percentage-based measures outlined above.
 
-## Implementation and training
+## Implementation and Training
 
 The loss function is computed as the average over the forecasted time steps of the mean squared error of the predictions. The losses for the outputs are then averaged to obtain the network loss. Formally, for the sample associated with cell $(i, j)$, we can write the per-sample loss as
 
@@ -225,7 +237,7 @@ The loss function is computed as the average over the forecasted time steps of t
 
 For optimization, we use the <span style="font-variant:small-caps;">AMSGrad</span> [@j.2018on] variant of <span style="font-variant:small-caps;">adam</span> with a learning rate of 0.0005. We train each neural network for a maximum of 1000 epochs with the following early stopping scheme: if the loss on the validation set does not improve over a 200-epoch window, we terminate training and revert back to the weights on the epoch with the lowest validation loss. The validation set used in the early stopping criterion is defined to be the subset of the training data that becomes available after calendar year 1995. For each line of business, we create an ensemble of 100 models, each trained with the same architecture but different random weight initialization. This is done to reduce the variance inherent in the randomness associated with neural networks.
 
-We implement DeepTriangle using the keras R package [@chollet2017kerasR] with the TensorFlow [@tensorflow2015-whitepaper] backend. Code for producing the experiment results is available online.[^1]
+We implement DeepTriangle using the keras R package [@chollet2017kerasR] and TensorFlow [@tensorflow2015-whitepaper], which are open source software for developing neural network models. Code for producing the experiment results is available online.[^1]
 
 [^1]: https://github.com/kasaai/deeptriangle
 
@@ -300,9 +312,9 @@ legend <- get_legend(p1)
 plot_grid(p12, legend, rel_widths = c(1, 0.2), nrow = 1)
 ```
 
-# Conclusion
+# Conclusion {#conclusion}
 
-We introduce DeepTriangle, a deep learning framework for forecasting paid losses. Our models are able to attain performance comparable, by our metrics, to modern stochastic reserving techniques without expert input. By utilizing neural networks, we can incorporate multiple heterogeneous inputs and train on multiple objectives simultaneously, and also allow customization of models based on available data.
+We introduce DeepTriangle, a deep learning framework for forecasting paid losses. Our models are able to attain performance comparable, by our metrics, to modern stochastic reserving techniques, without expert input. This means one can automate the model updating and report production at the desired frequency. By utilizing neural networks, we can incorporate multiple heterogeneous inputs and train on multiple objectives simultaneously, and also allow customization of models based on available data. To summarize, this framework maintains accuracy while providing  automatability and extensibility.
 
 We analyze an aggregated dataset with limited features in this paper because it is publicly available and well studied, but one can extend DeepTriangle to incorporate additional data, such as claim counts.
 
