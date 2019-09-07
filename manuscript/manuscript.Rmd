@@ -42,7 +42,7 @@ In the loss reserving exercise for property and casualty insurers, actuaries are
 
 There can be time lags both for reporting of claims, where the insurer is not notified of a loss until long after it has occurred, and for final development of claims, where payments continue long after the loss has been reported. Also, the amounts of claims are uncertain before they have fully developed. These factors contribute to the difficulty of the loss reserving problem, for which extensive literature exists and active research is being done. We refer the reader to @england2002stochastic for a survey of the problem and existing techniques.
 
-Deep learning has garnered increasing interest in recent years due to successful applications in many fields [@lecun2015deep] and has recently made its way into the loss reserving literature. @wuthrich2018neural augments the traditional chain ladder method with neural networks to incorporate claims features, @gabrielli2018individual utilizes neural networks to syntheisze claims data, and @gabrielli2018neural and @gabrielli2019neural embeds classical parametric loss reserving models into neural networks. More specifically, the development in @gabrielli2018neural and @gabrielli2019neural proposes initializing a neural network so that, before training, it corresponds exactly to a classical model, such as the over-dispersed Poisson model. The training iterations then adjust the weights of the neural network to minimize the prediction errors, which can be interpreted as a boosting procedure.
+Deep learning has garnered increasing interest in recent years due to successful applications in many fields [@lecun2015deep] and has recently made its way into the loss reserving literature. @wuthrich2018neural augments the traditional chain ladder method with neural networks to incorporate claims features, @gabrielli2018individual utilize neural networks to syntheisze claims data, and @gabrielli2018neural and @gabrielli2019neural embed classical parametric loss reserving models into neural networks. More specifically, the development in @gabrielli2018neural and @gabrielli2019neural proposes initializing a neural network so that, before training, it corresponds exactly to a classical model, such as the over-dispersed Poisson model. The training iterations then adjust the weights of the neural network to minimize the prediction errors, which can be interpreted as a boosting procedure.
 
 In developing our framework, which we call DeepTriangle, we also draw inspiration from the existing stochastic reserving literature. Works that propose utilizing data in addition paid losses include @quarg2004munich, which uses incurred losses, and @miranda2012double, which incorporates claim count information. Moving beyond a single homogeneous portfolio, @avanzi2016stochastic considers the dependencies among lines of business within an insurer's portfolio, and @peremans2018robust proposes a robust general multivariate chain ladder approach to accommodate outliers. There is also a category of models, referred to as state space or adaptive models, that allow parameters to evolve recursively in time as more data is observed [@chukhrova2017state]. This iterative updating mechanism is analogous to the recurrent neural network architecture presented in this paper.
 
@@ -58,7 +58,7 @@ For comprehensive treatments of neural network mechanics and implementation, we 
 knitr::include_graphics("figures/feedforward.png")
 ```
 
-We motivate the discussion by considering an example feedforward network with fully connected layers represented in Figure \ref{fig:feedforward}, where the goal is to predict an output $y$ from input $x = (x_1, x_2, \dots, x_{n_x})$, where $n_x$ is the number of elements of $x$. The intermediate values, $h_j^{[l]}$, known as hidden units, are organized into layers, which try to transform the input data into representations that successively become more useful at predicting the output. The nodes in the figure are computed, for each layer $l = 1, \dots, L$, as
+We motivate the discussion by considering an example feedforward network with fully connected layers represented in Figure \ref{fig:feedforward}, where the goal is to predict an output $y$ from input $x$. The intermediate values, known as hidden layers, are represented by $h_j^{[l]}$, try to transform the input data into representations that successively become more useful at predicting the output. The nodes in the figure are computed, for each layer $l = 1, \dots, L$, as
 
 \begin{equation}
 h_j^{[l]} = g^{[l]}(z_j^{[l]}),
@@ -67,21 +67,21 @@ h_j^{[l]} = g^{[l]}(z_j^{[l]}),
 where
 
 \begin{equation}
-z_j^{[l]} = \sum_k w_{jk}^{[l]}h_k^{[l-1]} + b_j^{[l]}.
+z_j^{[l]} = w_j^{[l]T}h^{[l-1]}+ b_j^{[l]}.
 \end{equation}
 
-Here, the index $j$ spans $\{1,\dots,n^{[l]}\}$, where $n^{[l]}$ denotes the number of units in layer $l$. The functions $g^{[l]}$ are called activation functions, whose values $h_j^{[l]}$ are known as activations. The $w^{[l]}$ values come from matrices $W^{[l]}$, with dimensions $n^{[l]} \times n^{[l-1]}$. Together with the biases $b_j^{[l]}$, they represent the weights, which are learned during training, for layer $l$.
+The $g^{[l]}$ are called activation functions, whose values $h^{[l]}$ are known as activations. The vectors $w_j^{[l]}$ and scalars $b_j^{[l]}$ and known as the weights and biases, respectively, corresponding to the $j$-th component of the $[l]$-th layer. These weights and biases together represent the parameters of the neural network, which are learned during training.
 
-For $l = 1$, we define the previous layer activations as the input, so that $n^{[0]} = n_x$. Hence, the calculation for the first hidden layer becomes
+For $l = 1$, we define the previous layer activations as the input, so that the calculation for the first hidden layer becomes
 \begin{equation}
-h_j^{[1]} = g^{[1]}\left(\sum_k w_{jk}^{[1]}x_k + b_j^{[1]}\right).
+h_j^{[1]} = g^{[1]}(w_j^{[1]T}x + b_j^{[1]})
 \end{equation}
 Also, for the output layer $l = L$, we compute the prediction
 \begin{equation}
-\hat{y} = h_j^{[L]} = g^{[L]}\left(\sum_k w_{jk}^{[L]}h_k^{[L-1]} + b_j^{[L]}\right).
+\hat{y} = h_j^{[L]} = g^{[L]}(w_{j}^{[L]T}h^{[L-1]} + b_j^{[L]}).
 \end{equation}
 
-We can then think of a neural network as a sequence of function compositions $f = f_L \circ f_{L-1} \circ \dots \circ f_1$ parameterized as $f(x; W^{[1]}, b^{[1]}, \dots, W^{[L]}, b^{[L]})$. Here, it should be mentioned that the activation functions $g^{[t]}$ are chosen to be nonlinear, except for possibly in the output layer. These nonlinearities are key to the success of neural networks, because otherwise we would have a trivial composition of linear models.
+We can then think of a neural network as a sequence of function compositions $f = f_L \circ f_{L-1} \circ \dots \circ f_1$ parameterized as $f(x; W^{[1]}, b^{[1]}, \dots, W^{[L]}, b^{[L]})$. Here, it should be mentioned that the $g^{[l]}$ ($l = 1, \dots, L$) are chosen to be nonlinear, except for possibly in the output layer. These nonlinearities are key to the success of neural networks, because otherwise we would have a trivial composition of linear models.
 
 Each neural network model is specified with a specific loss function, which is used to measure how close the model predictions are to the actual values. During model training, the parameters discussed above are iteratively updated in order to minimize the loss function. Each update of the parameters typically involves only a subset, or mini-batch, of the training data, and one complete pass through the training data, which includes many updates, is known as an epoch. Training a neural network often requires many passes through the data.
 
@@ -113,7 +113,7 @@ and
 \{OS_{ij}: i = 1, \dots, I; j = 1, \dots, I - i + 1\}.
 \end{equation}
 
-Assume that we are interested in development through the $I$th development year; in other words, we only forecast through the eldest maturity in the available data. The goal then is to obtain predictions for future values $\{\widehat{P}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$ and $\{\widehat{OS}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$. We can then determine ultimate losses for each accident year $i \in 1, \dots, I$ by calculating
+Assume that we are interested in development through the $I$th development year; in other words, we only forecast through the eldest maturity in the available data. The goal then is to obtain predictions for future values $\{\widehat{P}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$ and $\{\widehat{OS}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$. We can then determine ultimate losses (UL) for each accident year $i = 1, \dots, I$ by calculating
 
 \begin{equation}
 \widehat{UL}_i = \left(\sum_{j = 1}^{I - i + 1} P_{ij}\right) + \left(\sum_{j = I - i + 2}^I \widehat{P}_{ij}\right).
