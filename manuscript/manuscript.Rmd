@@ -181,7 +181,7 @@ We first encode the sequential predictor with a GRU to obtain a summary encoding
 
 ### Company Code Embeddings
 
-The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. In other words, the embedding value for each company is parameterized by a vector consisting of 49 real numbers. This mapping mechanism is part of the neural network and hence is learned during the training of the network, instead of a separate data preprocessing step. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
+The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. In other words, each company is represented by a vector in $\mathbb{R}^49$. This mapping mechanism is part of the neural network and hence is learned during the training of the network, instead of in a separate data preprocessing step, so the numerical representations are optimized for predicted the future paid losses. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
 
 ### Fully connected layers and outputs
 
@@ -211,6 +211,8 @@ Insurers often have access to richer information than is available in regulatory
 
 # Experiments {#exps}
 
+We now describe the performance metrics for benchmarking the models and training details, then discuss the results.
+
 ## Evaluation Metrics
 
 We aim to produce scalar metrics to evaluate the performance of the model on each line of business. To this end, for each company and each line of business, we calculate the actual and predicted ultimate losses as of development year 10, for all accident years combined, then compute the root mean squared percentage error (RMSPE) and mean absolute percentage error (MAPE) over companies in each line of business. Percentage errors are used in order to have unit-free measures for comparing across companies with vastly different sizes of portfolios. Formally, if $\mathcal{C}_l$ is the set of companies in line of business $l$,
@@ -234,7 +236,7 @@ An alternative approach for evaluation could involve weighting the company resul
 The loss function is computed as the average over the forecasted time steps of the mean squared error of the predictions. The losses for the outputs are then averaged to obtain the network loss. Formally, for the sample associated with cell $(i, j)$, we can write the per-sample loss as
 
 \begin{equation}
-\frac{1}{I-i+1-(j-1)}\sum_{k = j}^{I-i+1}\frac{(\widehat{P_{ik}} - P_{ik})^2 + (\widehat{OS_{ik}} - OS_{ik})^2}{2}.
+\frac{1}{I-i+1-(j-1)}\sum_{k = j}^{I-i+1}\frac{(\widehat{P_{i,k}} - P_{i,k})^2 + (\widehat{OS_{i,k}} - OS_{i,k})^2}{2}.
 \end{equation}
 
 For optimization, we use the <span style="font-variant:small-caps;">AMSGrad</span> [@j.2018on] variant of <span style="font-variant:small-caps;">adam</span> with a learning rate of 0.0005. We train each neural network for a maximum of 1000 epochs with the following early stopping scheme: if the loss on the validation set does not improve over a 200-epoch window, we terminate training and revert back to the weights on the epoch with the lowest validation loss. The validation set used in the early stopping criterion is defined to be the subset of the training data that becomes available after calendar year 1995. For each line of business, we create an ensemble of 100 models, each trained with the same architecture but different random weight initialization. This is done to reduce the variance inherent in the randomness associated with neural networks.
@@ -243,7 +245,7 @@ We implement DeepTriangle using the keras R package [@chollet2017kerasR] and Ten
 
 [^1]: https://github.com/kasaai/deeptriangle
 
-## Results and discussion
+## Results and Discussion
 
 ```{r, echo = FALSE, results="asis", message = FALSE}
 data_dir <- file.path(here::here(), "datasets")
@@ -316,7 +318,7 @@ plot_grid(p12, legend, rel_widths = c(1, 0.2), nrow = 1)
 
 # Conclusion {#conclusion}
 
-We introduce DeepTriangle, a deep learning framework for forecasting paid losses. Our models are able to attain performance comparable, by our metrics, to modern stochastic reserving techniques, without expert input. This means one can automate the model updating and report production at the desired frequency. By utilizing neural networks, we can incorporate multiple heterogeneous inputs and train on multiple objectives simultaneously, and also allow customization of models based on available data. To summarize, this framework maintains accuracy while providing  automatability and extensibility.
+We introduce DeepTriangle, a deep learning framework for forecasting paid losses. Our models are able to attain performance comparable, by our metrics, to modern stochastic reserving techniques, without expert input. This means that one can automate model updating and report production at the desired frequency (although we note that, as with any automated machine learning system, a process involving expert review should be implemented). By utilizing neural networks, we can incorporate multiple heterogeneous inputs and train on multiple objectives simultaneously, and also allow customization of models based on available data. To summarize, this framework maintains accuracy while providing automatability and extensibility.
 
 We analyze an aggregated dataset with limited features in this paper because it is publicly available and well studied, but one can extend DeepTriangle to incorporate additional data, such as claim counts.
 
