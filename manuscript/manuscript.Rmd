@@ -46,7 +46,7 @@ Deep learning has garnered increasing interest in recent years due to successful
 
 In developing our framework, which we call DeepTriangle[^2], we also draw inspiration from the existing stochastic reserving literature. Works that propose utilizing data in addition to paid losses include @quarg2004munich, which uses incurred losses, and @miranda2012double, which incorporates claim count information. Moving beyond a single homogeneous portfolio, @avanzi2016stochastic considers the dependencies among lines of business within an insurer's portfolio, while @peremans2018robust proposes a robust general multivariate chain ladder approach to accommodate outliers. There is also a category of models, referred to as state space or adaptive models, that allow parameters to evolve recursively in time as more data is observed [@chukhrova2017state]. This iterative updating mechanism is similar in spirit to the continuous updating of neural network weights during model deployment.
 
-[^2]: A portmanteau of *deep learning* and *loss development triangle*
+[^2]: A portmanteau of *deep learning* and *loss development triangle*.
 
 The approach that we develop differs from existing works in many ways, and has the following advantages. First, it enables joint modeling of paid losses and claims outstanding for multiple companies simultaneously in a single model. In fact, the architecture can also accommodate arbitrary additional inputs, such as claim count data and economic indicators, should they be available to the modeler. Second, it requires no manual input during model updates or forecasting, which means that predictions can be generated more frequently than traditional processes, and, in turn, allows management to react to changes in the portfolio sooner.
 
@@ -76,7 +76,7 @@ for $j = 1, \dots, n^{[l]}$. In these equations, a superscript $[l]$ denotes ass
 
 For $l = 1$, we define the previous layer activations as the input, so that the calculation for the first hidden layer becomes
 \begin{equation}
-h_j^{[1]} = g^{[1]}(w_j^{[1]T}x + b_j^{[1]})
+h_j^{[1]} = g^{[1]}(w_j^{[1]T}x + b_j^{[1]}).
 \end{equation}
 Also, for the output layer $l = L$, we compute the prediction
 \begin{equation}
@@ -155,7 +155,7 @@ Since the two target quantities, paid loss and claims outstanding, are related, 
 knitr::include_graphics("figures/nn3.png")
 ```
 
-For handling the time series of paid losses and claims outstanding, we utilize gated recurrent units (GRU) [@chung2014empirical], which is a type of recurrent neural network (RNN) building block that is appropriate for sequential data. A graphical representation of a GRU is shown in Figure \ref{fig:gru}, and the associated equations are as follows:
+For handling the time series of paid losses and claims outstanding, we utilize gated recurrent units (GRU) [@chung2014empirical], which is a type of recurrent neural network (RNN) building block that is appropriate for sequential data. A graphical representation of a GRU is shown in Figure \ref{fig:gru}, and the associated equations are as follows[^3]:
 
 \begin{equation}
 \tilde{h}^{<t>} = \tanh(W_h[\Gamma_r h^{<t-1>}, x^{<t>}] + b_h)
@@ -170,6 +170,8 @@ For handling the time series of paid losses and claims outstanding, we utilize g
 h^{<t>} = \Gamma_u^{<t>} \tilde{h}^{<t>} + (1 - \Gamma_u^{<t>})h^{<t-1>}.
 \end{equation}
 
+[^3]: Note the use of angle brackets to index position in a sequence rather than layers in a feedforward neural network as in Section \@ref(prelim).
+
 Here, $h^{<t>}$ and $x^{<t>}$ represent the activation and input values, respectively, at time $t$, and $\sigma$ denotes the logistic sigmoid function defined as
 
 \begin{equation}
@@ -181,11 +183,11 @@ We first encode the sequential predictor with a GRU to obtain a summary encoding
 
 ### Company Code Embeddings
 
-The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. In other words, each company is represented by a vector in $\mathbb{R}^49$. This mapping mechanism is part of the neural network and hence is learned during the training of the network, instead of in a separate data preprocessing step, so the numerical representations are optimized for predicted the future paid losses. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
+The company code input is first passed to an embedding layer. In this process, each company is mapped to a fixed length vector in $\mathbb{R}^k$, where $k$ is a hyperparameter. In our case, we choose $k = \text{number of levels} - 1 = 49$, as recommended in @DBLP:journals/corr/GuoB16. In other words, each company is represented by a vector in $\mathbb{R}^{49}$. This mapping mechanism is part of the neural network and hence is learned during the training of the network, instead of in a separate data preprocessing step, so the learned numerical representations are optimized for predicted the future paid losses. Companies that are similar in the context of our claims forecasting problem are mapped to vectors that are close to each other in terms of Euclidean distance. Intuitively, one can think of this representation as a proxy for characteristics of the companies, such as size of book and case reserving philosophy. Categorical embedding is a common technique in deep learning that has been successfully applied to recommendation systems [@Cheng_2016] and retail sales prediction [@DBLP:journals/corr/GuoB16]. In the actuarial science literature, @richman2018neural utilize embedding layers to capture characteristics of regions in mortality forecasting, while @gabrielli2018neural apply them to lines of business factors in loss reserving.
 
-### Fully connected layers and outputs
+### Fully Connected Layers and Outputs
 
-Each timestep of the decoded sequence from the GRU decoder is then concatenated with the company embedding output. The concatenated values are then passed to two subnetworks of fully connected layers, each of which shares weights across the timesteps. The two subnetworks correspond to the paid loss and case outstanding predictions, respectively, and each consist of a hidden layer of 64 units with a dropout rate of 0.2, and an output layer of 1 unit to represent a scalar.
+Each timestep of the decoded sequence from the GRU decoder is then concatenated with the company embedding output. The concatenated values are then passed to two subnetworks of fully connected layers, each of which shares weights across the timesteps. The two subnetworks correspond to the paid loss and case outstanding predictions, respectively, and each consists of a hidden layer of 64 units with a dropout rate of 0.2, followed by an output layer of 1 unit to represent the paid loss or claims outstanding at a time step.
 
 ```{r gru, out.width = "70%", fig.cap = "Gated recurrent unit.", fig.align="center", echo = FALSE, fig.pos="h"}
 knitr::include_graphics("figures/gru.png")
@@ -197,7 +199,7 @@ Rectified linear unit (ReLU) [@nair2010rectified], defined as
 x \mapsto \max(0, x),
 \end{equation}
 
-is used as the activation function (which we denoted as $g$ in Section \@ref(prelim)) for all fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
+is used as the activation function (which we denote by $g$ in Section \@ref(prelim)) for all fully connected layers, including both of the output layers. We remark that this choice of output activation implies we only predict nonnegative cash flows, i.e. no recoveries. This assumption is reasonable for the dataset we use in our experiments, but may be modified to accommodate other use cases.
 
 ## Deployment Considerations
 
@@ -243,7 +245,7 @@ For optimization, we use the <span style="font-variant:small-caps;">AMSGrad</spa
 
 We implement DeepTriangle using the keras R package [@chollet2017kerasR] and TensorFlow [@tensorflow2015-whitepaper], which are open source software for developing neural network models. Code for producing the experiment results is available online.[^1]
 
-[^1]: https://github.com/kasaai/deeptriangle
+[^1]: https://github.com/kasaai/deeptriangle.
 
 ## Results and Discussion
 
