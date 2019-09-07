@@ -60,7 +60,7 @@ For comprehensive treatments of neural network mechanics and implementation, we 
 knitr::include_graphics("figures/feedforward.png")
 ```
 
-We motivate the discussion by considering an example feedforward network with fully connected layers represented in Figure \ref{fig:feedforward}, where the goal is to predict an output $y$ from input $x$. The intermediate values, known as hidden layers, are represented by $h_j^{[l]}$, try to transform the input data into representations that successively become more useful at predicting the output. The nodes in the figure are computed, for each layer $l = 1, \dots, L$, as
+We motivate the discussion by considering an example feedforward network with fully connected layers represented in Figure \ref{fig:feedforward}, where the goal is to predict an output $y$ from input $x$. The intermediate values, known as hidden layers and represented by $h_j^{[l]}$, try to transform the input data into representations that successively become more useful at predicting the output. The nodes in the figure are computed, for each layer $l = 1, \dots, L$, as
 
 \begin{equation}
 h_j^{[l]} = g^{[l]}(z_j^{[l]}),
@@ -69,10 +69,10 @@ h_j^{[l]} = g^{[l]}(z_j^{[l]}),
 where
 
 \begin{equation}
-z_j^{[l]} = w_j^{[l]T}h^{[l-1]}+ b_j^{[l]}.
+z_j^{[l]} = w_j^{[l]T}h^{[l-1]}+ b_j^{[l]},
 \end{equation}
 
-The $g^{[l]}$ are called activation functions, whose values $h^{[l]}$ are known as activations. The vectors $w_j^{[l]}$ and scalars $b_j^{[l]}$ and known as the weights and biases, respectively, corresponding to the $j$-th component of the $[l]$-th layer. These weights and biases together represent the parameters of the neural network, which are learned during training.
+for $j = 1, \dots, n^{[l]}$. In these equations, a superscript $[l]$ denotes association with the layer $l$, a subscript $j$ denotes association with the $j$-th component of the layer, of which there are $n^{[l]}$. The $g^{[l]}$ ($l = 1, \dots, L$) are called activation functions, whose values $h^{[l]}$ are known as activations. The vectors $w_j^{[l]}$ and scalars $b_j^{[l]}$ are known as weights and biases, respectively, and together represent the parameters of the neural network, which are learned during training.
 
 For $l = 1$, we define the previous layer activations as the input, so that the calculation for the first hidden layer becomes
 \begin{equation}
@@ -101,27 +101,27 @@ We use the following variables from the dataset in our study: line of business, 
 
 ## Training/Testing Setup
 
-Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{ij}\}$ and $\{OS_{ij}\}$ denote the *incremental* paid losses and the *total* claims outstanding, or case reserves, respectively.
+Let indices $1 \leq i \leq I$ denote accident years and $1 \leq j \leq J$ denote development years under consideration. Also, let $\{P_{i,j}\}$ and $\{OS_{i,j}\}$ denote the *incremental* paid losses and the *total* claims outstanding, or case reserves, respectively.
 
 Then, at the end of calendar year $I$, we have access to the observed data
 
 \begin{equation}
-\{P_{ij}: i = 1, \dots, I; j = 1, \dots, I - i + 1\}
+\{P_{i,j}: i = 1, \dots, I; j = 1, \dots, I - i + 1\}
 \end{equation}
 
 and
 
 \begin{equation}
-\{OS_{ij}: i = 1, \dots, I; j = 1, \dots, I - i + 1\}.
+\{OS_{i,j}: i = 1, \dots, I; j = 1, \dots, I - i + 1\}.
 \end{equation}
 
-Assume that we are interested in development through the $I$th development year; in other words, we only forecast through the eldest maturity in the available data. The goal then is to obtain predictions for future values $\{\widehat{P}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$ and $\{\widehat{OS}_{ij}: i = 2, \dots, I; j = i+1, \dots, I\}$. We can then determine ultimate losses (UL) for each accident year $i = 1, \dots, I$ by calculating
+Assume that we are interested in development through the $I$th development year; in other words, we only forecast through the eldest maturity in the available data. The goal then is to obtain predictions for future values $\{\widehat{P}_{i,j}: i = 2, \dots, I; j = i+1, \dots, I\}$ and $\{\widehat{OS}_{i,j}: i = 2, \dots, I; j = i+1, \dots, I\}$. We can then determine ultimate losses (UL) for each accident year $i = 1, \dots, I$ by calculating
 
 \begin{equation}
-\widehat{UL}_i = \left(\sum_{j = 1}^{I - i + 1} P_{ij}\right) + \left(\sum_{j = I - i + 2}^I \widehat{P}_{ij}\right).
+\widehat{UL}_i = \left(\sum_{j = 1}^{I - i + 1} P_{i,j}\right) + \left(\sum_{j = I - i + 2}^I \widehat{P}_{i,j}\right).
 \end{equation}
 
-In our case, data as of year end 1997 is used for training. WE then evaluate predictive performance on the development year 10 cumulative paid losses.
+In our case, data as of year end 1997 is used for training. We then evaluate predictive performance on the development year 10 cumulative paid losses.
 
 ## Response and Predictor Variables
 
@@ -130,26 +130,26 @@ In DeepTriangle, each training sample is associated with an accident year-develo
 \begin{equation}
 (Y_{i,j},Y_{i,j+1},\dots,Y_{i,I - i + 1}), 
 \end{equation}
-where each $Y_{ij} = (P_{ij} / NPE_{i}, OS_{ij} / NPE_{i})$, where $NPE_{i}$ denotes the net earned premium for accident year $i$. Working with loss ratios makes training more tractable by normalizing values into a similar scale.
+where each $Y_{i,j} = (P_{i,j} / NPE_{i}, OS_{i,j} / NPE_{i})$, and $NPE_{i}$ denotes the net earned premium for accident year $i$. Working with loss ratios makes training more tractable by normalizing values into a similar scale.
 
 The predictor for the sample contains two components. The first component is the observed history as of the end of the calendar year associated with the cell:
 
 \begin{equation}
 (Y_{i,1}, Y_{i,2}, \dots, Y_{i,j-1}).
 \end{equation}
-In other words, for each accident year and at each evaluation date for which we have data, we attempt to predict future development of the accident year's paid losses and claims outstanding based on the observed history as of that date. While we are ultimately interested in $P_{ij}$, the paid losses, we include claims outstanding as an auxiliary output of the model. We elaborate on the reasoning behind this approach in the next section.
+In other words, for each accident year and at each evaluation date for which we have data, we attempt to predict future development of the accident year's paid losses and claims outstanding based on the observed history as of that date. While we are ultimately interested in $P_{i,j}$, the paid losses, we include claims outstanding as an auxiliary output of the model. We elaborate on the reasoning behind this approach in the next section.
 
 The second component of the predictor is the company identifier associated with the experience. Because we include experience from multiple companies in each training iteration, we need a way to differentiate the data from different companies. We discuss handling of the company identifier in more detail in the next section. 
 
 ## Model Architecture
 
-As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network utilizing a sequence-to-sequence architecture [@sutskever2014sequence; @DBLP:journals/corr/SrivastavaMS15] with two prediction goals: paid loss and claims outstanding. We construct one model for each line of business and each model is trained on data from multiple companies.
+As shown in Figure \ref{fig:dt}, DeepTriangle is a multi-task network [@caruana1997multitask] utilizing a sequence-to-sequence architecture [@sutskever2014sequence; @DBLP:journals/corr/SrivastavaMS15] with two prediction goals: paid loss and claims outstanding. We construct one model for each line of business and each model is trained on data from multiple companies.
 
-### Multi-task learning
+### Multi-Task Learning
 
-Since the two target quantities, paid loss and claims outstanding, are related, we expect to obtain better performance by jointly training than predicting each quantity independently [@caruana1997multitask]. While @caruana1997multitask contains detailed discourse on the specific mechanisms of multi-task learning, we provide some heuristics on why it may improve predictions: by utilizing the reponse data from claims outstanding, we are effectively increasing the training data size since we are providing more signals to the learning algorithm; there may be hidden features, useful for predicting paid losses, that are more easily learned by trying to predict claims outstanding; also, by trying to predict claims outstanding during training, we are imposing a bias towards neural network weights which perform that task well, which lessens the likelihood of arriving at a model that overfits to random noise.
+Since the two target quantities, paid loss and claims outstanding, are related, we expect to obtain better performance by jointly training than predicting each quantity independently. While @caruana1997multitask contains detailed discourse on the specific mechanisms of multi-task learning, we provide some heuristics on why it may improve predictions: by utilizing the reponse data for claims outstanding, we are effectively increasing the training data size since we are providing more signals to the learning algorithm; there may be hidden features, useful for predicting paid losses, that are more easily learned by trying to predict claims outstanding; also, by trying to predict claims outstanding during training, we are imposing a bias towards neural network weight configurations which perform that task well, which lessens the likelihood of arriving at a model that overfits to random noise.
 
-### Sequential input processing
+### Sequential Input Processing
 
 ```{r dt, out.width = "100%", fig.cap = "DeepTriangle architecture. \\textit{Embed} denotes embedding layer, \\textit{GRU} denotes gated recurrent unit, \\textit{FC} denotes fully connected layer.", fig.align="center", echo = FALSE}
 knitr::include_graphics("figures/nn3.png")
@@ -177,7 +177,7 @@ Here, $h^{<t>}$ and $x^{<t>}$ represent the activation and input values, respect
 \end{equation}
 $W_h$, $W_r$, $W_u$, $b_h$, $b_r$, and $b_u$ are the appropriately sized weight matrices and biases to be learned. Intuitively, the activations $h^{<t>}$ provide a way for the network to maintain state and "remember" values from early values of the input sequence. The values $\tilde{h}^{<t>}$ can be thought of as candidates to replace the current state, and $\Gamma_u^{<t>}$ determines the weighting between the previous state and the candidate state. We remark that although the GRU (and RNN in general) may seem opaque at first, they contain sequential instructions for updating weights just like vanilla feedforward neural networks (and can in fact be interpreted as such [@goodfellow2016deep]).
 
-We first encode the sequential predictor with a GRU to obtain a summary encoding of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU that outputs its hidden state for each time step. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. For both the encoder and decoder GRU modules, we use 128 hidden units and a dropout rate of 0.2. Here, dropout refers to the regime where, during training, we randomly set the output of the hidden units to zero with a specified probability, in order to reduce overfitting [@srivastava2014dropout].
+We first encode the sequential predictor with a GRU to obtain a summary encoding of the historical values. We then repeat the output $I-1$ times before passing them to a decoder GRU that outputs its hidden state for each time step. The factor $I-1$ is chosen here because for the $I$th accident year, we need to forecast $I-1$ timesteps into the future. For both the encoder and decoder GRU modules, we use 128 hidden units and a dropout rate of 0.2. Here, dropout refers to the regime where, during training, at each iteration, we randomly set the output of the hidden units to zero with a specified probability, in order to reduce overfitting [@srivastava2014dropout]. Intuitively, dropout accomplishes this by approximating an ensemble of sub-networks that can be constructed by removing some hidden units.
 
 ### Company Code Embeddings
 
