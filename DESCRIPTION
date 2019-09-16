@@ -1,7 +1,7 @@
 Package: deeptriangle
 Type: Package
 Title: DeepTriangle
-Version: 0.2.0.9000
+Version: 0.3.0
 Authors@R: person("Kevin", "Kuo", email = "kevin@kasa.ai", 
                   role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7803-7901"))
 Description: Source code for the DeepTriangle paper.
