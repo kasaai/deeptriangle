@@ -2,9 +2,8 @@ Package: deeptriangle
 Type: Package
 Title: DeepTriangle
 Version: 0.2.0.9000
-Authors@R: person("Kevin", "Kuo", email = "kevin.kuo@rstudio.com", 
+Authors@R: person("Kevin", "Kuo", email = "kevin@kasa.ai", 
                   role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7803-7901"))
-Maintainer: Kevin Kuo <kevin.kuo@rstudio.com>
 Description: Source code for the DeepTriangle paper.
 License: Apache License (>= 2.0)
 Encoding: UTF-8
