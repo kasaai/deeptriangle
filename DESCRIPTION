@@ -30,7 +30,8 @@ Suggests:
     rmarkdown,
     tinytex,
     rticles,
-    kableExtra
+    kableExtra,
+    bookdown
 LazyData: true
 RoxygenNote: 6.1.1
 Remotes:
